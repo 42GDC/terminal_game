@@ -1,7 +1,7 @@
 # 🎮 42 Game Dev Peer Class Curriculum
 
 This curriculum takes you from basic terminal I/O to building a complete **2D terminal game**.  
-You’ll learn graphics (via ANSI codes), input handling, interactive systems, and engine-like architecture — all inside the terminal.
+You will learn graphics (via ANSI codes), input handling, interactive systems, time management and engine-like architecture — all inside the terminal.
 
 ---
 
