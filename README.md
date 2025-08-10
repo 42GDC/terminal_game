@@ -13,7 +13,7 @@ git clone git@github.com:42GDC/terminal_game.git
 cd terminal_game
 git switch -c your_intra_name
 ```
-test
+
 ---
 
 ## 📂 Terminal Game (No Graphics)
