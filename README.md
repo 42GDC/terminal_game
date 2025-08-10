@@ -4,7 +4,7 @@ This curriculum takes you from basic terminal I/O to building a complete **2D te
 You will learn graphics (via ANSI codes), input handling, interactive systems, time management and engine-like architecture — all inside the terminal.
 
 ---
-
+trolololol
 ## ⚠️ Before you start ⚠️ 
 
 Request access to the repository and create a branch with your intra name.
