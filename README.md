@@ -8,16 +8,22 @@ You’ll learn graphics (via ANSI codes), input handling, interactive systems, a
 ## ⚠️ Before you start ⚠️ 
 
 Request access to the repository and create a branch with your intra name.
+```bash
+git clone git@github.com:42GDC/terminal_game.git
+cd terminal_game
+git switch -c your_intra_name
+```
 
 ---
 
-## 📂 cell00: Terminal Map (No Graphics)
+## 📂 Terminal Game (No Graphics)
 
 ---
 
 ### **ex00: Display Map from File**
 **Goal:**  
 Load a map from a `.txt` file (e.g., `1` = wall, `0` = floor, `P` = player).
+The maps are available in the assets subdirectory.
 
 **Compare:**
 ```bash
@@ -31,7 +37,7 @@ Load a map from a `.txt` file (e.g., `1` = wall, `0` = floor, `P` = player).
 
 typedef struct s_map
 {
-	char m[MAP_HEIGHT][MAP_WIDTH];
+	char	m[MAP_HEIGHT][MAP_WIDTH];
 } t_map;
 
 void print_map(t_map *map);
@@ -72,8 +78,8 @@ Enclose the printed map in a **box**, draw elements with spaces and shaded chara
 ```c
 typedef struct s_map
 {
-	char *name;
-	char m[MAP_HEIGHT][MAP_WIDTH];
+	char	*name;
+	char	m[MAP_HEIGHT][MAP_WIDTH];
 } t_map;
 
 void print_map(t_map *map);
@@ -117,6 +123,17 @@ Quit if the player reaches the exit or presses `Q`.
 ```
 
 **Prototype:**
+```c
+typedef struct s_map
+{
+	char	*name;
+	char	m[MAP_HEIGHT][MAP_WIDTH];
+	int		px;
+	int		py;
+	int		key;
+} t_map;
+```
+
 ```c
 void game_loop(t_map *map);
 ```
@@ -191,13 +208,14 @@ Display score at the top of the screen.
 
 **Prototype:**
 ```c
-typedef struct s_map {
-    char *name;
-    char m[MAP_HEIGHT][MAP_WIDTH];
-    int px;
-    int py;
-    int key;
-    int score;
+typedef struct s_map
+{
+	char	*name;
+	char	m[MAP_HEIGHT][MAP_WIDTH];
+	int		px;
+	int		py;
+	int		key;
+	int		score;
 } t_map;
 ```
 
@@ -230,6 +248,22 @@ Track level index and reload map files accordingly.
 **Compare:**
 ```bash
 ./example08
+```
+
+**Prototype:**
+```c
+typedef struct s_map
+{
+	char	*name;
+	char	m[MAP_HEIGHT][MAP_WIDTH];
+	int		px;
+	int		py;
+	int		key;
+	int		score;
+	long	start_time;     // map start time (ms)
+	long	last_print;     // last screen update time
+	long	last_move;      // last movement accepted
+} t_map;
 ```
 
 <details>
@@ -265,7 +299,8 @@ Use an **alternate screen buffer** for the game, restore terminal afterward, and
 <summary>💡 Hint</summary>
 
 ```c
-system("paplay " COIN_WAV " &");
+#define ENTER_ALT_SCREEN  "\033[?1049h"
+#define EXIT_ALT_SCREEN   "\033[?1049l"
 ```
 </details>
 
@@ -317,7 +352,7 @@ Add the time left to the score at the end of each level. Find a balance that wil
 
 ---
 
-## 🛠️ Attributes
+## 📜 Attributions
 [Coin sound](https://opengameart.org/content/plingy-coin) (by Fupi) is from OpenGameArt.Org and in CC0 license
 
 ---
