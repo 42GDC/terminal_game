@@ -17,10 +17,7 @@ void print_map(t_map *map)
 
 	for (i = 0; i < MAP_HEIGHT; i++)
 	{
-		for (j = 0; j < MAP_WIDTH; j++)
-		{
-			write(0, &(map->m[i][j]), 1);
-		}
+		write(0, &(map->m[i][0]), MAP_WIDTH);
 		write(0, "\n", 1);
 	}
 }
@@ -28,20 +25,18 @@ void print_map(t_map *map)
 void read_map(char *filename, t_map *map)
 {
 	size_t	fd;
-	char	buf[MAP_WIDTH + 1];
 	int		i;
 	int		j;
 
 	fd = open(filename, O_RDONLY);
 	for (i = 0; i < MAP_HEIGHT; i++)
 	{
-		if (read(fd, &buf, MAP_WIDTH + 1) < MAP_WIDTH)
+		if (read(fd, &(map->m[i][0]), MAP_WIDTH) < MAP_WIDTH)
 		{
 			map->m[0][0] = '\0';
 			return ;
 		}
-		for (j = 0; j < MAP_WIDTH; j++)
-			map->m[i][j] = buf[j];
+		lseek(fd, 1, SEEK_CUR);
 	}
 	close(fd);
 }
