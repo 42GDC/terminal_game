@@ -1,4 +1,6 @@
-//add includes
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdio.h>
 
 #define MAP_WIDTH 15
 #define MAP_HEIGHT 8
@@ -15,7 +17,18 @@ void print_map(t_map *map)
 
 void read_map(char *filename, t_map *map)
 {
-	//add code
+	// if (file_check(filename))
+	// 	perror("Fail: ");
+
+	int fd = open(filename, O_RDONLY);
+	
+	if (fd == -1)
+		perror("Fail: ");
+
+	size_t size = (MAP_WIDTH + 1) * MAP_WIDTH;
+	size_t bytes = read(fd, (char *)map->m, size);
+	
+	write(1, &map->m, bytes);
 }
 
 int main(int ac, char *av[])
