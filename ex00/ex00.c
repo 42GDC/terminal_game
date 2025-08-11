@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <string.h>
 
 #define MAP_WIDTH 15
 #define MAP_HEIGHT 8
@@ -12,7 +13,11 @@ typedef struct s_map
 
 void print_map(t_map *map)
 {
-	//add code
+	for(int i = 0; i < MAP_HEIGHT; i++)
+	{
+		write(1, &map->m[i], MAP_WIDTH );
+		write(1, "\n", 1);
+	}	
 }
 
 void read_map(char *filename, t_map *map)
@@ -25,10 +30,12 @@ void read_map(char *filename, t_map *map)
 	if (fd == -1)
 		perror("Fail: ");
 
-	size_t size = (MAP_WIDTH + 1) * MAP_WIDTH;
-	size_t bytes = read(fd, (char *)map->m, size);
+	char buf[MAP_HEIGHT * MAP_WIDTH + MAP_HEIGHT];
+	size_t bytes = read(fd, buf, sizeof(buf));
+
+	for (int i = 0; i < MAP_HEIGHT; i++)
+		memcpy(map->m[i], &buf[i * (MAP_WIDTH + 1)], MAP_WIDTH);
 	
-	write(1, &map->m, bytes);
 	close(fd);
 }
 
