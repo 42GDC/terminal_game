@@ -29,6 +29,7 @@ void read_map(char *filename, t_map *map)
 	size_t bytes = read(fd, (char *)map->m, size);
 	
 	write(1, &map->m, bytes);
+	close(fd);
 }
 
 int main(int ac, char *av[])
