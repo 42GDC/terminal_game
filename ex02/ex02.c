@@ -28,7 +28,7 @@ typedef struct s_arena
 typedef struct s_map
 {
 	char		**m;
-    char        *name;
+	char        *name;
 	size_t		w;
 	size_t		h;
 	t_arena		arena;
@@ -75,58 +75,58 @@ void	*alloc_arena(t_arena *a, size_t size)
 
 int		is_wall(char c)
 {
-    return (c == '1');
+	return (c == '1');
 }
 
 const char *get_tile_display(char c)
 {
-    switch (c)
-    {
-        case '1': return BLACK "██" RESET;   // Black text
-        case '0': return WHITE "██" RESET;   // White text  
-        case 'P': return GREEN "██" RESET;   // Green text
-        case 'E': return RED "██" RESET;     // Red text
-        default:  return "??";
-    }
+	switch (c)
+	{
+		case '1': return BLACK "██" RESET;
+		case '0': return WHITE "██" RESET;
+		case 'P': return GREEN "██" RESET;
+		case 'E': return RED "██" RESET;
+		default:  return "??";
+	}
 }
 
 const char *get_tile_display_d(char c)
 {
-    switch (c)
-    {
-        case '1': return BG_BLACK "W" RESET;       // Wall
-        case '0': return " ";                            // Space
-        case 'P': return BG_GREEN "P" RESET;       // Player
-        case 'E': return BG_RED "E" RESET;         // Exit
-        default:  return "?";
-    }
+	switch (c)
+	{
+		case '1': return BG_BLACK "W" RESET;
+		case '0': return " ";
+		case 'P': return BG_GREEN "P" RESET;
+		case 'E': return BG_RED "E" RESET;
+		default:  return "?";
+	}
 }
 
 void	print_map(t_map *map)
 {
-    size_t name_len = strlen(map->name) - 4;
-    size_t display_width = map->w * 2;  // Each tile is 2 chars wide
-    size_t padding = (display_width + 2 > name_len) ? (display_width + 2 - name_len) / 2 : 0;
-    
-    // Print centered title
-    printf(BOLD CYAN "%*s%.*s\n" RESET, (int)padding, "", (int)name_len, map->name);
-    printf("╔");
-    for (size_t i = 0; i < display_width; i++)
-        printf("═");
-    printf("╗\n");
-    
-    for (size_t i = 0; i < map->h; i++)
-    {
-        printf("║");
-        for (size_t j = 0; j < map->w; j++)
-            printf("%s", get_tile_display(map->m[i][j]));
-        printf("║\n");
-    }
-    
-    printf("╚");
-    for (size_t i = 0; i < display_width; i++)
-        printf("═");
-    printf("╝\n");
+	size_t name_len = strlen(map->name) - 4;
+	size_t display_width = map->w * 2;  // Each tile is 2 chars wide
+	size_t padding = (display_width + 2 > name_len) ? (display_width + 2 - name_len) / 2 : 0;
+	
+	// Print centered title
+	printf(BOLD CYAN "%*s%.*s\n" RESET, (int)padding, "", (int)name_len, map->name);
+	printf("╔");
+	for (size_t i = 0; i < display_width; i++)
+		printf("═");
+	printf("╗\n");
+	
+	for (size_t i = 0; i < map->h; i++)
+	{
+		printf("║");
+		for (size_t j = 0; j < map->w; j++)
+			printf("%s", get_tile_display(map->m[i][j]));
+		printf("║\n");
+	}
+	
+	printf("╚");
+	for (size_t i = 0; i < display_width; i++)
+		printf("═");
+	printf("╝\n");
 }
 
 /* Check top/bottom/left/right are enclosed */
@@ -137,12 +137,12 @@ int		validate_walls(t_map *map)
 		if (!is_wall(map->m[0][i]) || !is_wall(map->m[map->h - 1][i]))
 			return (err_exit("Bad horizontal walls", map, 0), 0);
 	}
-    
-    for (size_t j = 0; j < map->h; j++)
+	
+	for (size_t j = 0; j < map->h; j++)
 		if (!is_wall(map->m[j][0]) || !is_wall(map->m[j][map->w - 1]))
 			return (err_exit("Bad vertical walls", map, 0), 0);
-    
-    return (1);
+	
+	return (1);
 }
 
 /* Alloc and copy into map */
@@ -224,11 +224,11 @@ int	file_check(char *filename)
 void	read_map(char *filename, t_map *map)
 {
 	int		fd = file_check(filename);
-    map->name = strrchr(filename, '/');
-    if (!map->name)
-        map->name = filename;
-    else
-        map->name += 1;
+	map->name = strrchr(filename, '/');
+	if (!map->name)
+		map->name = filename;
+	else
+		map->name += 1;
 	
 	size_t	buf_size = map->arena.size / 2;
 	char	*buf = alloc_arena(&map->arena, map->arena.size / 2);
