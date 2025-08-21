@@ -5,146 +5,194 @@
 #include <stdlib.h>
 
 
-#define FILESIZE 2048
 #define WALL "1"
 #define SPACE "0"
-//testing, want to remove
-#define MAP_WIDTH 15
-#define MAP_HEIGHT 8
+
+typedef struct s_arena
+{
+	void	*mem;
+	size_t	size;
+	size_t	offset;
+} t_arena;
 
 typedef struct s_map
 {
-	char	**m;
+	char		**m;
 	size_t		w;
 	size_t		h;
+	t_arena		arena;
 } t_map;
 
-int is_wall(char c)
+
+void	free_map(t_map *map)
+{
+	if (map && map->arena.mem)
+	{
+		free(map->arena.mem);
+		map->arena = (t_arena){0};
+		map->m = NULL;
+	}
+}
+
+void	err_exit(const char *s, t_map *map, int fd)
+{
+	if (fd > 0) close(fd);
+	if (map) free_map(map);
+	write(2, s, strlen(s));
+	write(2, "\n", 1);
+	exit(1);
+}
+
+t_arena	arena_init(size_t size)
+{
+	t_arena a = {malloc(size), size, 0};
+	if (!a.mem)
+		err_exit("alloc fail", NULL, 0);
+	return (a);
+}
+
+void	*alloc_arena(t_arena *a, size_t size)
+{
+	if (a->offset + size > a->size)
+		err_exit("Arena out of mem", NULL, 0);
+	void *ptr = a->mem + a->offset;
+	a->offset += size;
+	return (ptr);
+}
+
+int		is_wall(char c)
 {
     return (c == '1');
 }
 
-void print_map(t_map *map)
+void	print_map(t_map *map)
 {
-	if (map)
+	for(size_t i = 0; i < map->h; i++)
 	{
-		for(size_t i = 0; i < map->h; i++)
-		{
-			write(1, map->m[i], map->w);
-			write(1, "\n", 1);
-		}	
-	}
+		write(1, map->m[i], map->w);
+		write(1, "\n", 1);
+	}	
 }
 
-int ends_with_txt(const char *str, size_t n)
+int		validate_walls(t_map *map)
+{   
+	if (strspn(map->m[0], WALL) != map->w
+	|| strspn(map->m[map->h - 1], WALL) != map->w)
+		return (err_exit("Bad horizontal walls", map, 0), 0);
+
+	for (size_t i = 0; i < map->w; i++)
+	{
+		if (!is_wall(map->m[0][i]) || !is_wall(map->m[map->h - 1][i]))
+			return (err_exit("Bad vertical walls", map, 0), 0);
+	}
+    
+    for (size_t j = 0; j < map->h; j++)
+		if (!is_wall(map->m[j][0]) || !is_wall(map->m[j][map->w - 1]))
+			return (err_exit("Bad vertical walls", map, 0), 0);
+    
+    return (1);
+}
+
+void	fill_map(const char *buf, t_map *map)
+{
+	map->m = alloc_arena(&map->arena, map->h * sizeof(char *));
+	for (size_t i = 0; i < map->h; i++)
+	{
+		map->m[i] = alloc_arena(&map->arena, map->w + 1);
+		memcpy(map->m[i], &buf[i * (map->w + 1)], map->w);
+		map->m[i][map->w] = '\0';
+	}
+	return ;
+}
+
+void	map_check(const char *buf, t_map *map)
+{
+	const char *line = strchr(buf, '\n');
+	if (!line)
+		return (err_exit("No newlines", map, 0));
+	
+	map->w = line - buf;
+	map->h = 0;
+	
+	line = buf;
+	while ((line = strchr(line, '\n')) != NULL)
+	{
+		map->h++;
+		line++;
+	}
+	printf("w: %lu h: %lu\n", map->w, map->h);
+
+	line = buf;
+	for (size_t i = 0; i < map->h; i++)
+	{
+		const char *next_line = strchr(line, '\n');
+
+		size_t line_len;
+		if (next_line)
+			line_len = next_line - line;
+		else
+			line_len = strlen(line);
+
+		if (line_len != map->w)
+			return (err_exit("Inconsistent line lengths", map, 0));
+		if (next_line)
+			line = next_line + 1;
+	}
+	fill_map(buf, map);
+}
+
+int	ends_with_txt(const char *str, size_t n)
 {
 	size_t	len = strlen(str);
 
-	printf("%s %d\n", str + (len - n), strcmp(str + (len - n), ".txt"));
 	if (len < n)
 		return (0);	
 	return (strcmp(str + (len - n), ".txt") == 0);
 }
 
-int file_check(char *filename)
+int	file_check(char *filename)
 {
 	int fd;
 
 	if (!ends_with_txt(filename, 4))
-		return (perror("Wrong filetype"), 0);
+		return (err_exit("Wrong filetype", NULL, 0), 0);
 
 	fd = open(filename, O_RDONLY);
 	
 	printf("opened %d\n", fd);
 	if (fd < 0)
-	{
-		close(fd);
-		return (perror("Can't open"), 0);
-	}
+		return (close(fd), err_exit("Can't open", NULL, fd), 0);
 	
 	return fd;
 }
 
-int validate_walls(t_map *map)
-{   
-	if (strspn(map->m[0], "1") != map->w || strspn(map->m[map->h - 1], "1") != map->w)
-		return (perror("Bad horizontal walls"), 0);
-    
-    for (size_t j = 0; j < map->h; j++)
-    {
-        if (!is_wall(map->m[j][0]) || !is_wall(map->m[j][map->w - 1]))
-            return (perror("Bad vertical walls"), 0);
-    }
-    
-    return (1);
-}
-
-void map_check(const char *buf, t_map *map)
-{
-	const char *line = strchr(buf, '\n');
-	if (!line)
-		return (perror("No newlines"));
-
-	size_t width = line - buf;
-	size_t height = 0;
-	
-	line = buf;
-	while ((line = strchr(line, '\n')) != NULL)
-	{
-		height++;
-		line++;
-	}
-	map->w = width;
-	map->h = height;
-	printf("w: %lu h: %lu\n", map->w, map->h);
-	map->m = malloc(height * sizeof(char *));
-	if (!map->m)
-		return ;
-	for (size_t i = 0; i < height; i++)
-	{
-		map->m[i] = malloc(width * sizeof(char) + 1);
-		if (!map->m[i])
-		{
-			while (i-- >= 0)
-				free(map->m[i]);
-			free(map->m);
-			return;
-		}
-		memcpy(map->m[i], &buf[i * (width + 1)], width);
-		map->m[i][width] = '\0';
-	}
-	return ;
-}
-
-void read_map(char *filename, t_map *map)
+void	read_map(char *filename, t_map *map)
 {
 	int		fd = file_check(filename);
-	char	buf[FILESIZE];
 	
-	if (fd <= 0)
-		return (perror("Fail"));
-
-	size_t bytes = read(fd, buf, sizeof(buf));
+	size_t	buf_size = map->arena.size / 2;
+	char	*buf = alloc_arena(&map->arena, map->arena.size / 2);
+	size_t	bytes = read(fd, buf, buf_size);
 	if (bytes <= 0)
-	{
-		close(fd);
-		return (perror("Can't read file"));
-	}
+		return (close(fd), err_exit("Can't read file", map, 0));
+	
 	buf[bytes] = '\0';
 	map_check(buf, map);
-	if (map->m && !validate_walls(map))
-    	return (perror("Wall validation failed"));
-
+	validate_walls(map);
+	
 	close(fd);
 }
 
-int main(int ac, char *av[])
+int	main(int ac, char *av[])
 {
 	if (ac == 2)
 	{
 		t_map map = {0};
+		map.arena = arena_init(1 << 16); //64kb
+
 		read_map(av[1], &map);
 		print_map(&map);
+		free_map(&map);
 	}
 	return 0;
 }
