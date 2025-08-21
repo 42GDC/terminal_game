@@ -5,9 +5,6 @@
 #include <stdlib.h>
 
 
-#define WALL "1"
-#define SPACE "0"
-
 typedef struct s_arena
 {
 	void	*mem;
@@ -34,6 +31,7 @@ void	free_map(t_map *map)
 	}
 }
 
+/* Prints error message, frees map and closes fd if needed */
 void	err_exit(const char *s, t_map *map, int fd)
 {
 	if (fd > 0) close(fd);
@@ -43,6 +41,7 @@ void	err_exit(const char *s, t_map *map, int fd)
 	exit(1);
 }
 
+/* One malloc needed */
 t_arena	arena_init(size_t size)
 {
 	t_arena a = {malloc(size), size, 0};
@@ -74,16 +73,13 @@ void	print_map(t_map *map)
 	}	
 }
 
+/* Check top/bottom/left/right are enclosed */
 int		validate_walls(t_map *map)
-{   
-	if (strspn(map->m[0], WALL) != map->w
-	|| strspn(map->m[map->h - 1], WALL) != map->w)
-		return (err_exit("Bad horizontal walls", map, 0), 0);
-
+{
 	for (size_t i = 0; i < map->w; i++)
 	{
 		if (!is_wall(map->m[0][i]) || !is_wall(map->m[map->h - 1][i]))
-			return (err_exit("Bad vertical walls", map, 0), 0);
+			return (err_exit("Bad horizontal walls", map, 0), 0);
 	}
     
     for (size_t j = 0; j < map->h; j++)
@@ -93,6 +89,7 @@ int		validate_walls(t_map *map)
     return (1);
 }
 
+/* Alloc and copy into map */
 void	fill_map(const char *buf, t_map *map)
 {
 	map->m = alloc_arena(&map->arena, map->h * sizeof(char *));
@@ -105,6 +102,7 @@ void	fill_map(const char *buf, t_map *map)
 	return ;
 }
 
+/* Get size of map, making sure it is rectangular */
 void	map_check(const char *buf, t_map *map)
 {
 	const char *line = strchr(buf, '\n');
@@ -150,6 +148,7 @@ int	ends_with_txt(const char *str, size_t n)
 	return (strcmp(str + (len - n), ".txt") == 0);
 }
 
+/* Check filename and ability to open */
 int	file_check(char *filename)
 {
 	int fd;
@@ -161,11 +160,12 @@ int	file_check(char *filename)
 	
 	printf("opened %d\n", fd);
 	if (fd < 0)
-		return (close(fd), err_exit("Can't open", NULL, fd), 0);
+		return (err_exit("Can't open", NULL, fd), 0);
 	
 	return fd;
 }
 
+/* Half arena is for file buf, other half is for program mem */
 void	read_map(char *filename, t_map *map)
 {
 	int		fd = file_check(filename);
@@ -174,7 +174,7 @@ void	read_map(char *filename, t_map *map)
 	char	*buf = alloc_arena(&map->arena, map->arena.size / 2);
 	size_t	bytes = read(fd, buf, buf_size);
 	if (bytes <= 0)
-		return (close(fd), err_exit("Can't read file", map, 0));
+		return (err_exit("Can't read file", map, fd));
 	
 	buf[bytes] = '\0';
 	map_check(buf, map);
