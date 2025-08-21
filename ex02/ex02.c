@@ -94,11 +94,11 @@ const char *get_tile_display_d(char c)
 {
 	switch (c)
 	{
-		case '1': return BG_BLACK "W" RESET;
-		case '0': return " ";
-		case 'P': return BG_GREEN "P" RESET;
-		case 'E': return BG_RED "E" RESET;
-		default:  return "?";
+		case '1': return BG_BLACK "WW" RESET;
+		case '0': return "  ";
+		case 'P': return BG_GREEN "PP" RESET;
+		case 'E': return BG_RED "EE" RESET;
+		default:  return "??";
 	}
 }
 
@@ -119,7 +119,7 @@ void	print_map(t_map *map)
 	{
 		printf("║");
 		for (size_t j = 0; j < map->w; j++)
-			printf("%s", get_tile_display(map->m[i][j]));
+			printf("%s", get_tile_display_d(map->m[i][j]));
 		printf("║\n");
 	}
 	
