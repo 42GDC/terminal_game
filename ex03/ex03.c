@@ -119,7 +119,7 @@ void	print_map(t_map *map)
 	{
 		printf("║");
 		for (size_t j = 0; j < map->w; j++)
-			printf("%s", get_tile_display_d(map->m[i][j]));
+			printf("%s", get_tile_display(map->m[i][j]));
 		printf("║\n");
 	}
 	
@@ -163,7 +163,7 @@ void	map_check(const char *buf, t_map *map)
 {
 	const char *line = strchr(buf, '\n');
 	if (!line)
-		return (err_exit("No newlines", map, 0));
+		err_exit("No newlines", map, 0);
 	
 	map->w = line - buf;
 	map->h = 0;
@@ -172,8 +172,8 @@ void	map_check(const char *buf, t_map *map)
 	while ((line = strchr(line, '\n')) != NULL)
 	{
 		map->h++;
-		line++;
-	}
+        line++;
+    }
 	// printf("w: %lu h: %lu\n", map->w, map->h);
 
 	line = buf;
@@ -220,6 +220,28 @@ int	file_check(char *filename)
 	return fd;
 }
 
+void    get_player(t_map *map)
+{
+    int count = 0;
+
+    for (size_t i = 0; i < map->h; i++)
+    {
+        const char *p_line = strchr(map->m[i], 'P');
+        if (p_line)
+        {
+            map->py = i;
+            map->px = p_line - map->m[i];
+            printf("px: %lu py: %lu\n", map->px, map->py);
+            count++;
+        }
+    }
+    if (!map->px || !map->py)
+        err_exit("no player!", map, 0);
+    if (count > 1)
+        err_exit("multiple players!", map, 0);
+}
+
+
 /* Half arena is for file buf, other half is for program mem */
 void	read_map(char *filename, t_map *map)
 {
@@ -239,6 +261,7 @@ void	read_map(char *filename, t_map *map)
 	buf[bytes] = '\0';
 	map_check(buf, map);
 	validate_walls(map);
+    get_player(map);
 	
 	close(fd);
 }
