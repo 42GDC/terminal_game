@@ -236,6 +236,7 @@ void    get_player(t_map *map)
 			map->px = p_line - map->m[i];
 			printf("px: %d py: %d\n", map->px, map->py);
 			count++;
+			map->m[map->py][map->px] = '0';
 		}
 	}
 	if (!map->px || !map->py)
@@ -267,6 +268,13 @@ void	read_map(char *filename, t_map *map)
 	get_player(map);
 	
 	close(fd);
+}
+
+void	move_player(t_map *map)
+{
+
+	if (map->m[map->py][map->px] != '1')
+		map->m[map->py][map->px] = 'P';
 }
 
 static struct termios old, new1;
@@ -331,7 +339,8 @@ int	main(int ac, char *av[])
 		{
 			initTermios(0);
 			get_input(&map);
-			// print_map(&map);
+			move_player(&map);
+			print_map(&map);
 		}
 		print_map(&map);
 		free_map(&map);
