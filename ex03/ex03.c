@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <termios.h>
 
 // Color definitions
 #define BOLD     "\033[1m"
@@ -30,7 +31,7 @@ typedef struct s_map
 	char		**m;
 	char        *name;
 	size_t		w, h;
-    size_t      px, py;
+	int         px, py;
 	t_arena		arena;
 } t_map;
 
@@ -48,8 +49,10 @@ void	free_map(t_map *map)
 /* Prints error message, frees map and closes fd if needed */
 void	err_exit(const char *s, t_map *map, int fd)
 {
-	if (fd > 0) close(fd);
-	if (map) free_map(map);
+	if (fd > 0)
+		close(fd);
+	if (map)
+		free_map(map);
 	write(2, s, strlen(s));
 	write(2, "\n", 1);
 	exit(1);
@@ -172,8 +175,8 @@ void	map_check(const char *buf, t_map *map)
 	while ((line = strchr(line, '\n')) != NULL)
 	{
 		map->h++;
-        line++;
-    }
+		line++;
+	}
 	// printf("w: %lu h: %lu\n", map->w, map->h);
 
 	line = buf;
@@ -222,23 +225,23 @@ int	file_check(char *filename)
 
 void    get_player(t_map *map)
 {
-    int count = 0;
+	int count = 0;
 
-    for (size_t i = 0; i < map->h; i++)
-    {
-        const char *p_line = strchr(map->m[i], 'P');
-        if (p_line)
-        {
-            map->py = i;
-            map->px = p_line - map->m[i];
-            printf("px: %lu py: %lu\n", map->px, map->py);
-            count++;
-        }
-    }
-    if (!map->px || !map->py)
-        err_exit("no player!", map, 0);
-    if (count > 1)
-        err_exit("multiple players!", map, 0);
+	for (size_t i = 0; i < map->h; i++)
+	{
+		const char *p_line = strchr(map->m[i], 'P');
+		if (p_line)
+		{
+			map->py = i;
+			map->px = p_line - map->m[i];
+			printf("px: %d py: %d\n", map->px, map->py);
+			count++;
+		}
+	}
+	if (!map->px || !map->py)
+		err_exit("no player!", map, 0);
+	if (count > 1)
+		err_exit("multiple players!", map, 0);
 }
 
 
@@ -261,9 +264,59 @@ void	read_map(char *filename, t_map *map)
 	buf[bytes] = '\0';
 	map_check(buf, map);
 	validate_walls(map);
-    get_player(map);
+	get_player(map);
 	
 	close(fd);
+}
+
+static struct termios old, new1;
+void initTermios(int echo) {
+	tcgetattr(0, &old); /* grab old terminal i/o settings */
+	new1 = old; /* make new settings same as old settings */
+	new1.c_lflag &= ~ICANON; /* disable buffered i/o */
+	new1.c_lflag &= echo ? ECHO : ~ECHO; /* set echo mode */
+	tcsetattr(0, TCSANOW, &new1); /* use these new terminal i/o settings now */
+}
+
+/* Restore old terminal i/o settings */
+void resetTermios(void) {
+	tcsetattr(0, TCSANOW, &old);
+}
+
+/* 
+keycode: 119 W
+keycode: 97 A
+keycode: 115 S
+keycode: 100 D
+keycode: 27 ESC
+*/
+void    get_input(t_map *map)
+{
+	int key = 0;
+	int bytes = read(STDIN_FILENO, &key, 1);
+
+	printf("keycode: %d\n",key);
+	printf("px: %d py: %d\n", map->px, map->py);
+	switch (key)
+	{
+		case 119:
+			map->py--;
+			break;
+		case 97:
+			map->px--;
+			break;
+		case 115:
+			map->py++;
+			break;
+		case 100:
+			map->px++;
+			break;
+		case 27:
+			resetTermios();
+			err_exit("done", map, 0);
+		default:
+			return ;
+	}
 }
 
 int	main(int ac, char *av[])
@@ -274,6 +327,12 @@ int	main(int ac, char *av[])
 		map.arena = arena_init(1 << 16); //64kb
 
 		read_map(av[1], &map);
+		while (1)
+		{
+			initTermios(0);
+			get_input(&map);
+			// print_map(&map);
+		}
 		print_map(&map);
 		free_map(&map);
 	}
